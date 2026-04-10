@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/PriceIQ
+    username: postgres
+    password: 202401045
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+jwt:
+  secret: dslklvdsdvsldvnlkdvsldvsdsklndvs234567654rtrfgfdgf9e8fgh7gf89fg7hg8fd9f8g7hg8f9d8f7g6h
+  expiration: 86400000
