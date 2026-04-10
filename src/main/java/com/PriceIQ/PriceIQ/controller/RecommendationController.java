@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RecommendationController {
 
-    private final RecommendationService recommendationService;
+    private final RecommendationService recommendationService; //! NOT COMPLETED
 
     @GetMapping("/{userId}")
     public ResponseEntity<RecommendationResponse> getRecommendations(

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class PaymentResponse {
+public class PaymentResponse { //! NOT COMPLETED
 
     private Long paymentId;
 

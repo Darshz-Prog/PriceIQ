@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class NotificationServiceImpl implements NotificationService {
+public class NotificationServiceImpl implements NotificationService { //! NOT COMPLETED
 
     @Override
     public void sendOrderConfirmation(Long userId, Long orderId) {

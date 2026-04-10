@@ -83,8 +83,8 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        kafkaProducerService.publishOrderCreated(savedOrder.getId());
-        notificationService.sendOrderConfirmation(user.getId(), savedOrder.getId());
+        kafkaProducerService.publishOrderCreated(savedOrder.getId()); //!NOT COMPLETED
+        notificationService.sendOrderConfirmation(user.getId(), savedOrder.getId());//!NOT COMPLETED
 
         return mapToResponse(savedOrder);
     }

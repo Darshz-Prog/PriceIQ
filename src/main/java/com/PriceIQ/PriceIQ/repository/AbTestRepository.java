@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface AbTestRepository extends JpaRepository<AbTest, Long> {
+public interface AbTestRepository extends JpaRepository<AbTest, Long> { //! NOT COMPLETED
 
     List<AbTest> findByActiveTrue();
 

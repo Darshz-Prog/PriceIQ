@@ -17,8 +17,8 @@ public class AnalyticsController {
     public ResponseEntity<AnalyticsResponse> getDashboardAnalytics() {
         return ResponseEntity.ok(analyticsService.getDashboardAnalytics());
     }
-
-    @GetMapping("/trending-products")
+ 
+    @GetMapping("/trending-products") //! NOT COMPLETED
     public ResponseEntity<?> getTrendingProducts() {
         return ResponseEntity.ok(analyticsService.getTrendingProducts());
     }

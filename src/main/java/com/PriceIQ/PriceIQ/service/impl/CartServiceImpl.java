@@ -24,88 +24,92 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
 
-    private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
-    private final UserRepository userRepository;
-    private final ProductRepository productRepository;
+        private final CartRepository cartRepository;
+        private final CartItemRepository cartItemRepository;
+        private final UserRepository userRepository;
+        private final ProductRepository productRepository;
 
-    @Override
-    public CartResponse getCartByUserId(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+        @Override
+        public CartResponse getCartByUserId(Long userId) {
+                Cart cart = cartRepository.findByUserId(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
-        List<CartItemResponse> itemResponses = cart.getCartItems().stream().map(item -> {
-            Product p = item.getProduct();
-            String imageUrl = (p.getImages() != null && !p.getImages().isEmpty()) ? p.getImages().get(0).getImageUrl() : null;
-            BigDecimal price = item.getPriceAtAddition() != null ? item.getPriceAtAddition() : p.getCurrentPrice();
-            BigDecimal totalPrice = price != null ? price.multiply(BigDecimal.valueOf(item.getQuantity())) : BigDecimal.ZERO;
-            
-            return CartItemResponse.builder()
-                    .cartItemId(item.getId())
-                    .productId(p.getId())
-                    .productName(p.getName())
-                    .productImage(imageUrl)
-                    .quantity(item.getQuantity())
-                    .priceAtAddition(price)
-                    .totalPrice(totalPrice)
-                    .build();
-        }).collect(Collectors.toList());
+                List<CartItemResponse> itemResponses = cart.getCartItems().stream().map(item -> {
+                        Product p = item.getProduct();
+                        String imageUrl = (p.getImages() != null && !p.getImages().isEmpty())
+                                        ? p.getImages().get(0).getImageUrl()
+                                        : null;
+                        BigDecimal price = item.getPriceAtAddition() != null ? item.getPriceAtAddition()
+                                        : p.getCurrentPrice();
+                        BigDecimal totalPrice = price != null ? price.multiply(BigDecimal.valueOf(item.getQuantity()))
+                                        : BigDecimal.ZERO;
 
-        return CartResponse.builder()
-                .cartId(cart.getId())
-                .userId(userId)
-                .items(itemResponses)
-                .build();
-    }
+                        return CartItemResponse.builder()
+                                        .cartItemId(item.getId())
+                                        .productId(p.getId())
+                                        .productName(p.getName())
+                                        .productImage(imageUrl)
+                                        .quantity(item.getQuantity())
+                                        .priceAtAddition(price)
+                                        .totalPrice(totalPrice)
+                                        .build();
+                }).collect(Collectors.toList());
 
-    @Override
-    public CartResponse addToCart(CartRequest request) {
+                return CartResponse.builder()
+                                .cartId(cart.getId())
+                                .userId(userId)
+                                .items(itemResponses)
+                                .build();
+        }
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        @Override
+        public CartResponse addToCart(CartRequest request) {
 
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+                User user = userRepository.findById(request.getUserId())
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseGet(() -> cartRepository.save(Cart.builder().user(user).build()));
+                Product product = productRepository.findById(request.getProductId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        CartItem item = CartItem.builder()
-                .cart(cart)
-                .product(product)
-                .quantity(request.getQuantity())
-                .build();
+                Cart cart = cartRepository.findByUserId(user.getId())
+                                .orElseGet(() -> cartRepository.save(Cart.builder().user(user).build()));
 
-        cartItemRepository.save(item);
+                CartItem item = CartItem.builder()
+                                .cart(cart)
+                                .product(product)
+                                .quantity(request.getQuantity())
+                                .build();
 
-        return getCartByUserId(user.getId());
-    }
+                cartItemRepository.save(item);
 
-    @Override
-    public CartResponse removeFromCart(Long cartItemId) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+                return getCartByUserId(user.getId());
+        }
 
-        Long userId = cartItem.getCart().getUser().getId();
+        @Override
+        public CartResponse removeFromCart(Long cartItemId) {
+                CartItem cartItem = cartItemRepository.findById(cartItemId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
-        cartItemRepository.delete(cartItem);
+                Long userId = cartItem.getCart().getUser().getId();
 
-        return getCartByUserId(userId);
-    }
+                cartItemRepository.delete(cartItem);
 
-    @Override
-    public CartResponse updateQuantity(Long cartItemId, Integer quantity) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+                return getCartByUserId(userId);
+        }
 
-        cartItem.setQuantity(quantity);
-        cartItemRepository.save(cartItem);
+        @Override
+        public CartResponse updateQuantity(Long cartItemId, Integer quantity) {
+                CartItem cartItem = cartItemRepository.findById(cartItemId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
-        return getCartByUserId(cartItem.getCart().getUser().getId());
-    }
+                cartItem.setQuantity(quantity);
+                cartItemRepository.save(cartItem);
 
-    @Override
-    public void clearCart(Long userId) {
-        cartItemRepository.deleteAllByCartUserId(userId);
-    }
+                return getCartByUserId(cartItem.getCart().getUser().getId());
+        }
+
+        @Override
+        public void clearCart(Long userId) {
+                cartItemRepository.deleteAllByCartUserId(userId);
+        }
 }

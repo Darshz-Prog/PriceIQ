@@ -4,7 +4,7 @@ import com.PriceIQ.PriceIQ.entity.EventType;
 import lombok.Data;
 
 @Data
-public class EventRequest {
+public class EventRequest { //! NOT COMPLETED
 
     private Long userId;
 

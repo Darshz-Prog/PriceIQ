@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class RecommendationResponse {
+public class RecommendationResponse { //! NOT COMPLETED
 
     private Long userId;
 

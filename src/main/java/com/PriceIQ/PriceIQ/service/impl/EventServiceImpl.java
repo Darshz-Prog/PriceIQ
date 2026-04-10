@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EventServiceImpl implements EventService {
+public class EventServiceImpl implements EventService { //! NOT COMPLETED
 
     private final UserEventRepository userEventRepository;
     private final KafkaProducerService kafkaProducerService;

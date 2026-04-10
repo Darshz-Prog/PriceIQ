@@ -58,7 +58,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public Map<String, Object> getAdminMetrics() {
-
+//!
         Map<String, Object> metrics = new HashMap<>();
 
         metrics.put("totalOrders", orderRepository.count());

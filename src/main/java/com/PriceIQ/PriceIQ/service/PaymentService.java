@@ -3,7 +3,7 @@ package com.PriceIQ.PriceIQ.service;
 import com.PriceIQ.PriceIQ.dto.request.PaymentRequest;
 import com.PriceIQ.PriceIQ.dto.response.PaymentResponse;
 
-public interface PaymentService {
+public interface PaymentService { //! NOT COMPLETED
 
     PaymentResponse processPayment(PaymentRequest request);
 

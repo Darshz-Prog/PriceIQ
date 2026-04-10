@@ -35,7 +35,7 @@ public class ProductResponse {
 
     private Boolean active;
 
-    private List<String> imageUrls;
+    private List<ProductImageResponse> images;
 
     private Map<String, String> attributes;
 }

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class PaymentRequest {
+public class PaymentRequest { //! NOT COMPLETED
 
     @NotNull
     private Long orderId;

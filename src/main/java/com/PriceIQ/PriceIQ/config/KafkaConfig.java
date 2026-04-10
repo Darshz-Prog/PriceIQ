@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaConfig {
+public class KafkaConfig { //! NOT COMPLETED
 
     @Bean
     public NewTopic userEventsTopic() {

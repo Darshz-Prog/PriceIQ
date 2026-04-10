@@ -27,7 +27,7 @@ public class ProductRequest {
 
     private Boolean active;
 
-    private List<String> imageUrls;
+    private List<ProductImageRequest> images;
 
     private Map<String, String> attributes;
 }

@@ -2,7 +2,7 @@ package com.PriceIQ.PriceIQ.service;
 
 import com.PriceIQ.PriceIQ.dto.request.EventRequest;
 
-public interface KafkaProducerService {
+public interface KafkaProducerService { //! NOT COMPLETED
 
     void publishUserEvent(EventRequest request);
 

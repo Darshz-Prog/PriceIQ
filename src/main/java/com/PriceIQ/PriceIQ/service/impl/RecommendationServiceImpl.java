@@ -13,7 +13,7 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
-public class RecommendationServiceImpl implements RecommendationService {
+public class RecommendationServiceImpl implements RecommendationService { //! NOT COMPLETED
 
     private final MlServiceClient mlServiceClient;
     private final RedisCacheService redisCacheService;
@@ -43,6 +43,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     public void reloadModel() {
-        System.out.println("Reload recommendation model endpoint triggered");
+        System.out.println("Reload recommendation model endpoint triggered"); //! NOT COMPLETED
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PriceController {
 
-    private final PricingAlgorithmService pricingAlgorithmService;
+    private final PricingAlgorithmService pricingAlgorithmService;//! NOT COMPLETED
 
     @GetMapping("/{productId}")
     public ResponseEntity<Double> getLivePrice(

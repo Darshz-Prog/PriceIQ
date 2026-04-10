@@ -1,6 +1,6 @@
 package com.PriceIQ.PriceIQ.service;
 
-public interface NotificationService {
+public interface NotificationService { //! NOT COMPLETED
 
     void sendOrderConfirmation(Long userId, Long orderId);
 

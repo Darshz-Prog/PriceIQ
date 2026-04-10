@@ -12,6 +12,7 @@ import com.PriceIQ.PriceIQ.security.CustomUserDetailsService;
 import com.PriceIQ.PriceIQ.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,83 +22,85 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService customUserDetailsService;
+        private final UserRepository userRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final JwtService jwtService;
+        private final AuthenticationManager authenticationManager;
+        private final CustomUserDetailsService customUserDetailsService;
 
-    @Override
-    public AuthResponse register(RegisterRequest request) {
+        @Override
+        public AuthResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new InvalidRequestException("Email already exists");
+                if (userRepository.existsByEmail(request.getEmail())) {
+                        throw new InvalidRequestException("Email already exists");
+                }
+
+                User user = User.builder()
+                                .firstName(request.getFirstName())
+                                .lastName(request.getLastName())
+                                .email(request.getEmail())
+                                .password(passwordEncoder.encode(request.getPassword()))
+                                .role(Role.USER)
+                                .enabled(true)
+                                .accountNonLocked(true)
+                                .build();
+
+                userRepository.save(user);
+
+                UserDetails userdetail_user = customUserDetailsService.loadUserByUsername(request.getEmail());
+
+                String accessToken = jwtService.generateToken(userdetail_user);
+                String refreshToken = jwtService.generateRefreshToken(userdetail_user);
+
+                return AuthResponse.builder()
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken)
+                                .userId(user.getId())
+                                .email(user.getEmail())
+                                .build();
         }
 
-        User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .enabled(true)
-                .accountNonLocked(true)
-                .build();
+        @Override
+        public AuthResponse login(LoginRequest request) {
 
-        userRepository.save(user);
+                try {
+                        authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(
+                                                        request.getEmail(),
+                                                        request.getPassword()));
+                } catch (BadCredentialsException e) {
+                        throw new InvalidRequestException("Invalid email or password");
+                }
 
-        UserDetails userdetail_user = customUserDetailsService.loadUserByUsername(request.getEmail());
+                User user = userRepository.findByEmail(request.getEmail())
+                                .orElseThrow(() -> new InvalidRequestException("Invalid credentials"));
 
-        String accessToken = jwtService.generateToken(userdetail_user);
-        String refreshToken = jwtService.generateRefreshToken(userdetail_user);
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .userId(user.getId())
-                .email(user.getEmail())
-                .build();
-    }
+                return AuthResponse.builder()
+                                .accessToken(jwtService.generateToken(userDetails))
+                                .refreshToken(jwtService.generateRefreshToken(userDetails))
+                                .userId(user.getId())
+                                .email(user.getEmail())
+                                .build();
+        }
 
-    @Override
-    public AuthResponse login(LoginRequest request) {
+        @Override
+        public AuthResponse refreshToken(String refreshToken) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+                String token = refreshToken.replace("Bearer ", "");
+                String email = jwtService.extractUsername(token);
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new InvalidRequestException("Invalid credentials"));
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new InvalidRequestException("User not found"));
 
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
 
-        return AuthResponse.builder()
-                .accessToken(jwtService.generateToken(userDetails))
-                .refreshToken(jwtService.generateRefreshToken(userDetails))
-                .userId(user.getId())
-                .email(user.getEmail())
-                .build();
-    }
-
-    @Override
-    public AuthResponse refreshToken(String refreshToken) {
-
-        String token = refreshToken.replace("Bearer ", "");
-        String email = jwtService.extractUsername(token);
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidRequestException("User not found"));
-
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
-
-        return AuthResponse.builder()
-                .accessToken(jwtService.generateToken(userDetails))
-                .refreshToken(token)
-                .userId(user.getId())
-                .email(user.getEmail())
-                .build();
-    }
+                return AuthResponse.builder()
+                                .accessToken(jwtService.generateToken(userDetails))
+                                .refreshToken(token)
+                                .userId(user.getId())
+                                .email(user.getEmail())
+                                .build();
+        }
 }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PricingAlgorithmServiceImpl implements PricingAlgorithmService {
+public class PricingAlgorithmServiceImpl implements PricingAlgorithmService { //! NOT COMPLETED
 
     private final ProductRepository productRepository;
 

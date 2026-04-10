@@ -33,7 +33,7 @@ public class AdminController {
         );
     }
 
-    @PostMapping("/recommendation-model/reload")
+    @PostMapping("/recommendation-model/reload") //! THIS API IS NOT COMPLETED YET
     public ResponseEntity<GenericSuccessResponse> reloadRecommendationModel() {
         recommendationService.reloadModel();
 

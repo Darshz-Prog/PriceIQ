@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 @RequiredArgsConstructor
 public class MlServiceClient {
-
+//! NOT COMPLETED
     private final RestTemplate restTemplate;
 
     public MlRecommendationResponse getRecommendations(

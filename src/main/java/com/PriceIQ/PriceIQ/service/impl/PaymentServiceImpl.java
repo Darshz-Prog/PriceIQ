@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentServiceImpl implements PaymentService {
+public class PaymentServiceImpl implements PaymentService { // ! NOT COMPLETED
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
