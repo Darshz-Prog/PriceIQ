@@ -33,7 +33,14 @@ build/
 ### VS Code ###
 .vscode/
 
-
+target/
+.env
+.env.*
+!.env.example
+*.log
+.idea/
+node_modules/
+dist/
 
 mvn_output.txt
 mvn_output_after_fix.txt
