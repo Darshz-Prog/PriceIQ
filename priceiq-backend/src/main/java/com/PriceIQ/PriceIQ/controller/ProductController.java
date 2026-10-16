@@ -15,62 +15,55 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+        private final ProductService productService;
 
-    @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getAllProducts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String brand,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) String sortBy
-    ) {
-        return ResponseEntity.ok(
-                productService.getAllProducts(
-                        page, size, category, brand, minPrice, maxPrice, sortBy
-                )
-        );
-    }
+        @GetMapping
+        public ResponseEntity<Page<ProductResponse>> getAllProducts(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(required = false) String category,
+                        @RequestParam(required = false) String brand,
+                        @RequestParam(required = false) Double minPrice,
+                        @RequestParam(required = false) Double maxPrice,
+                        @RequestParam(required = false) String sortBy) {
+                return ResponseEntity.ok(
+                                productService.getAllProducts(
+                                                page, size, category, brand, minPrice, maxPrice, sortBy));
+        }
 
-    @GetMapping("/{productId}") // For now anyone can push the Products, later we will add authentication by some role like shopkeeper etc..
-    public ResponseEntity<ProductResponse> getProductById(
-            @PathVariable Long productId
-    ) {
-        return ResponseEntity.ok(productService.getProductById(productId));
-    }
+        @GetMapping("/{productId}")
+        public ResponseEntity<ProductResponse> getProductById(
+                        @PathVariable Long productId) {
+                return ResponseEntity.ok(productService.getProductById(productId));
+        }
 
-    @GetMapping("/search")
-    public ResponseEntity<Page<ProductResponse>> searchProducts(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(productService.searchProducts(keyword, page, size));
-    }
+        @GetMapping("/search")
+        public ResponseEntity<Page<ProductResponse>> searchProducts(
+                        @RequestParam String keyword,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
+                return ResponseEntity.ok(productService.searchProducts(keyword, page, size));
+        }
 
-    @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(
-            @Valid @RequestBody ProductRequest request
-    ) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(productService.createProduct(request));
-    }
+        @PostMapping
+        public ResponseEntity<ProductResponse> createProduct(
+                        @Valid @RequestBody ProductRequest request) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(productService.createProduct(request));
+        }
 
-    @PutMapping("/{productId}")
-    public ResponseEntity<ProductResponse> updateProduct(
-            @PathVariable Long productId,
-            @Valid @RequestBody ProductRequest request
-    ) {
-        return ResponseEntity.ok(productService.updateProduct(productId, request));
-    }
+        @PutMapping("/{productId}") // For now anyone can push the Products, later we will add authentication by
+                                    // some role like shopkeeper etc..
+        public ResponseEntity<ProductResponse> updateProduct(
+                        @PathVariable Long productId,
+                        @Valid @RequestBody ProductRequest request) {
+                return ResponseEntity.ok(productService.updateProduct(productId, request));
+        }
 
-    @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(
-            @PathVariable Long productId
-    ) {
-        productService.deleteProduct(productId);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{productId}")
+        public ResponseEntity<Void> deleteProduct(
+                        @PathVariable Long productId) {
+                productService.deleteProduct(productId);
+                return ResponseEntity.noContent().build();
+        }
 }

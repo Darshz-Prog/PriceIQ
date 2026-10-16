@@ -23,12 +23,32 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
     public void publishUserEvent(EventRequest request) {
         try {
             String payload = objectMapper.writeValueAsString(request);
-            kafkaTemplate.send(USER_EVENTS_TOPIC, String.valueOf(request.getUserId()), payload);
-            log.info("Published event: {} for user={} product={}",
-                    request.getEventType(), request.getUserId(), request.getProductId());
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize user event: {}", e.getMessage());
-            // Do NOT rethrow — Kafka failures must not break the primary business flow
+
+            kafkaTemplate.send(
+                    USER_EVENTS_TOPIC,
+                    String.valueOf(request.getUserId()),
+                    payload).whenComplete((result, exception) -> {
+                        if (exception != null) {
+                            log.error(
+                                    "Kafka publish failed for event={}, product={}",
+                                    request.getEventType(),
+                                    request.getProductId(),
+                                    exception);
+                        } else {
+                            log.info(
+                                    "Kafka publish succeeded for event={}, product={}",
+                                    request.getEventType(),
+                                    request.getProductId());
+                        }
+                    });
+
+        } catch (JsonProcessingException | RuntimeException e) {
+            log.error(
+                    "Unable to initiate Kafka publishing for product={}",
+                    request.getProductId(),
+                    e);
+            // Do not let Kafka publishing failure break the product API.
         }
     }
+
 }

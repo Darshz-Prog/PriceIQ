@@ -15,6 +15,7 @@ import com.PriceIQ.PriceIQ.service.EventService;
 import com.PriceIQ.PriceIQ.service.ProductService;
 import com.PriceIQ.PriceIQ.util.UserContextHelper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.PriceIQ.PriceIQ.specification.ProductSpecification;
 import com.PriceIQ.PriceIQ.specification.ProductSpecification.*;
@@ -23,7 +24,7 @@ import java.util.List;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -32,37 +33,32 @@ public class ProductServiceImpl implements ProductService {
         private final EventService eventService;
         private final UserContextHelper userContextHelper;
 
-    @Override
-    public Page<ProductResponse> getAllProducts(
-            int page,
-            int size,
-            String category,
-            String brand,
-            Double minPrice,
-            Double maxPrice,
-            String sortBy
-    ) {
+        @Override
+        public Page<ProductResponse> getAllProducts(
+                        int page,
+                        int size,
+                        String category,
+                        String brand,
+                        Double minPrice,
+                        Double maxPrice,
+                        String sortBy) {
 
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(sortBy == null ? "createdAt" : sortBy).descending()
-        );
+                Pageable pageable = PageRequest.of(
+                                page,
+                                size,
+                                Sort.by(sortBy == null ? "createdAt" : sortBy).descending());
 
-        Specification<Product> specification =
-        Specification.where(
-                ProductSpecification.hasCategory(category)
-        ).and(
-                ProductSpecification.hasBrand(brand)
-        ).and(
-                ProductSpecification.priceGreaterThanOrEqualTo(minPrice)
-        ).and(
-                ProductSpecification.priceLessThanOrEqualTo(maxPrice)
-        );
+                Specification<Product> specification = Specification.where(
+                                ProductSpecification.hasCategory(category)).and(
+                                                ProductSpecification.hasBrand(brand))
+                                .and(
+                                                ProductSpecification.priceGreaterThanOrEqualTo(minPrice))
+                                .and(
+                                                ProductSpecification.priceLessThanOrEqualTo(maxPrice));
 
-        return productRepository.findAll(specification,pageable)
-                .map(this::mapToResponse);
-    }
+                return productRepository.findAll(specification, pageable)
+                                .map(this::mapToResponse);
+        }
 
         @Override
         public ProductResponse getProductById(Long productId) {
@@ -70,13 +66,13 @@ public class ProductServiceImpl implements ProductService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
                 // Fire VIEW_PRODUCT event for the authenticated user
-                userContextHelper.getCurrentUserId().ifPresent(userId ->
-                        eventService.trackEvent(EventRequest.builder()
+                userContextHelper.getCurrentUserId().ifPresent(userId -> eventService.trackEvent(EventRequest.builder()
                                 .userId(userId)
                                 .productId(productId)
                                 .eventType(EventType.PRODUCT_VIEW)
                                 .build()));
 
+                log.info("PRODUCT_DEBUG: trackEvent call returned");
                 return mapToResponse(product);
         }
 
@@ -85,8 +81,7 @@ public class ProductServiceImpl implements ProductService {
                 Pageable pageable = PageRequest.of(page, size);
 
                 // Fire SEARCH event for the authenticated user
-                userContextHelper.getCurrentUserId().ifPresent(userId ->
-                        eventService.trackEvent(EventRequest.builder()
+                userContextHelper.getCurrentUserId().ifPresent(userId -> eventService.trackEvent(EventRequest.builder()
                                 .userId(userId)
                                 .eventType(EventType.SEARCH)
                                 .searchKeyword(keyword)
