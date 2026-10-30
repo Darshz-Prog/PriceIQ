@@ -40,7 +40,7 @@ public class KafkaConfig {
     private String caCertificatePath;
 
     // Common configuration for producer and consumer
-    private Map<String, Object> commonKafkaConfig() {
+    private Map<String, Object> commonKafkaConfig() throws Exception {
 
         Map<String, Object> config = new HashMap<>();
 
@@ -55,7 +55,7 @@ public class KafkaConfig {
 
         // PEM CA certificate verification
         config.put("ssl.truststore.type", "PEM");
-        config.put("ssl.truststore.location", caCertificatePath);
+config.put("ssl.truststore.certificates", getCaCertificate());
 
         return config;
     }
@@ -72,7 +72,7 @@ public class KafkaConfig {
 
     // Producer configuration
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
+    public ProducerFactory<String, String> producerFactory() throws Exception{
 
         Map<String, Object> config = commonKafkaConfig();
 
@@ -92,14 +92,14 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
+    public KafkaTemplate<String, String> kafkaTemplate() throws Exception {
 
         return new KafkaTemplate<>(producerFactory());
     }
 
     // Consumer configuration
     @Bean
-    public ConsumerFactory<String, String> consumerFactory() {
+    public ConsumerFactory<String, String> consumerFactory() throws Exception {
 
         Map<String, Object> config = commonKafkaConfig();
 
@@ -117,7 +117,7 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() throws Exception{
 
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
 
@@ -138,5 +138,13 @@ public class KafkaConfig {
                 SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         return mapper;
+    }
+
+        private String getCaCertificate() throws Exception {
+        try (var input = new org.springframework.core.io.ClassPathResource("aiven-ca.pem")
+                .getInputStream()) {
+            return new String(input.readAllBytes(),
+                    java.nio.charset.StandardCharsets.UTF_8);
+        }
     }
 }
