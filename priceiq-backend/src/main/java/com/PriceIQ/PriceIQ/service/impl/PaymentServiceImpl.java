@@ -17,8 +17,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PaymentServiceImpl implements PaymentService { // ! NOT COMPLETED
 
     private final PaymentRepository paymentRepository;
@@ -48,10 +51,16 @@ public class PaymentServiceImpl implements PaymentService { // ! NOT COMPLETED
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        notificationService.sendPaymentSuccess(
-                order.getUser().getId(),
-                savedPayment.getId()
-        );
+        order.setOrderStatus(com.PriceIQ.PriceIQ.entity.OrderStatus.CONFIRMED);
+        orderRepository.save(order);
+
+        try {
+            notificationService.sendPaymentSuccess(
+                    order.getUser().getId(),
+                    savedPayment.getId()
+            );
+        } catch (Exception ignored) {
+        }
 
         return PaymentResponse.builder()
                 .paymentId(savedPayment.getId())

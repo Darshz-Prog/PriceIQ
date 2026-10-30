@@ -19,5 +19,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findByCategoryAndActiveTrue(String category);
 
+    /**
+     * Returns active, purchasable products in a category.
+     * Used by similar-products and FBT fallback to avoid N+1 filtering.
+     */
+    List<Product> findByCategoryAndActiveTrueAndStockQuantityGreaterThan(String category, int minStock);
+
     org.springframework.data.domain.Page<Product> findByNameContainingIgnoreCase(String keyword, org.springframework.data.domain.Pageable pageable);
 }

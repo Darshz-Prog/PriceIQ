@@ -36,6 +36,7 @@ public class PricingWeight { //! Pending
     private Double seasonalWeight;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 
     @CreationTimestamp

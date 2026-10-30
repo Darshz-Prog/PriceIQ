@@ -60,6 +60,12 @@ export const apiRoutes = {
   updateProduct: (id, body) => api.put(`/api/v1/products/${id}`, body),
   deleteProduct: (id) => api.delete(`/api/v1/products/${id}`),
   feed: () => api.get("/api/v1/recommendations/feed"),
+  similarProducts: (productId, limit = 8) =>
+    api.get(`/api/v1/recommendations/similar/${productId}`, { params: { limit } }),
+  fbt: (productId, limit = 6) =>
+    api.get(`/api/v1/recommendations/fbt/${productId}`, { params: { limit } }),
+  trendingRecommendations: (limit = 12) =>
+    api.get("/api/v1/recommendations/trending", { params: { limit } }),
   cart: (userId) => api.get(`/api/v1/cart/${userId}`),
   addToCart: (body) => api.post("/api/v1/cart/add", body),
   updateCartQuantity: (id, quantity) =>

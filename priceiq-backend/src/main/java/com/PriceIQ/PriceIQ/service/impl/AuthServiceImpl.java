@@ -56,7 +56,10 @@ public class AuthServiceImpl implements AuthService {
                                 .accessToken(accessToken)
                                 .refreshToken(refreshToken)
                                 .userId(user.getId())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
                                 .email(user.getEmail())
+                                .role(user.getRole())
                                 .build();
         }
 
@@ -81,7 +84,10 @@ public class AuthServiceImpl implements AuthService {
                                 .accessToken(jwtService.generateToken(userDetails))
                                 .refreshToken(jwtService.generateRefreshToken(userDetails))
                                 .userId(user.getId())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
                                 .email(user.getEmail())
+                                .role(user.getRole())
                                 .build();
         }
 
@@ -100,7 +106,10 @@ public class AuthServiceImpl implements AuthService {
                                 .accessToken(jwtService.generateToken(userDetails))
                                 .refreshToken(token)
                                 .userId(user.getId())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
                                 .email(user.getEmail())
+                                .role(user.getRole())
                                 .build();
         }
 
@@ -132,7 +141,10 @@ public class AuthServiceImpl implements AuthService {
                                 .accessToken(accessToken)
                                 .refreshToken(refreshToken)
                                 .userId(user.getId())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
                                 .email(user.getEmail())
+                                .role(user.getRole())
                                 .build();
         }
 }

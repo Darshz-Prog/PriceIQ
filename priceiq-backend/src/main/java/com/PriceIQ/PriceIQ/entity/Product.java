@@ -47,6 +47,7 @@ public class Product {
     private Integer stockQuantity;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 
     @Column(nullable = false)

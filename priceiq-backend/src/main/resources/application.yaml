@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/PriceIQ}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/PriceIQ}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -26,7 +26,11 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USERNAME}" password="${KAFKA_PASSWORD}";
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:dslklvdsdvsldvnlkdvsldvsdsklndvs234567654rtrfgfdgf9e8fgh7gf89fg7hg8fd9f8g7hg8f9d8f7g6h}
   expiration: ${JWT_EXPIRATION:86400000}

@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
@@ -41,6 +44,13 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
 
         Review savedReview = reviewRepository.save(review);
+
+        // Update product average rating and total reviews
+        List<Review> reviews = reviewRepository.findByProductId(product.getId());
+        double avg = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
+        product.setAverageRating(Math.round(avg * 10.0) / 10.0);
+        product.setTotalReviews(reviews.size());
+        productRepository.save(product);
 
         return mapToResponse(savedReview);
     }

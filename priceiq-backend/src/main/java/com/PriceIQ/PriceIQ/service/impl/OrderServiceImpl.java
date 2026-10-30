@@ -2,6 +2,7 @@ package com.PriceIQ.PriceIQ.service.impl;
 
 import com.PriceIQ.PriceIQ.dto.request.EventRequest;
 import com.PriceIQ.PriceIQ.dto.request.OrderRequest;
+import com.PriceIQ.PriceIQ.dto.response.OrderItemResponse;
 import com.PriceIQ.PriceIQ.dto.response.OrderResponse;
 import com.PriceIQ.PriceIQ.entity.Cart;
 import com.PriceIQ.PriceIQ.entity.EventType;
@@ -26,8 +27,12 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import com.PriceIQ.PriceIQ.repository.CartItemRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderServiceImpl implements OrderService {
 
         private final OrderRepository orderRepository;
@@ -36,12 +41,22 @@ public class OrderServiceImpl implements OrderService {
         private final NotificationService notificationService;
         private final EventService eventService;
         private final CartRepository cartRepository;
+        private final CartItemRepository cartItemRepository;
 
         @Override
         public OrderResponse createOrder(OrderRequest request) {
 
                 User user = userRepository.findById(request.getUserId())
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                Cart cart = cartRepository.findFirstByUserIdAndActiveTrue(request.getUserId())
+                                .or(() -> cartRepository.findFirstByUserIdOrderByIdDesc(request.getUserId()))
+                                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+
+                List<com.PriceIQ.PriceIQ.entity.CartItem> cartItems = cartItemRepository.findByCartId(cart.getId());
+                if (cartItems.isEmpty()) {
+                        throw new com.PriceIQ.PriceIQ.exception.InvalidRequestException("Cannot place an order with an empty cart");
+                }
 
                 Order order = Order.builder()
                                 .user(user)
@@ -60,17 +75,16 @@ public class OrderServiceImpl implements OrderService {
                                 .createdAt(LocalDateTime.now())
                                 .build();
 
-                Cart cart = cartRepository.findByUserId(request.getUserId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
-
-                List<OrderItem> items = cart.getCartItems().stream()
+                List<OrderItem> items = cartItems.stream()
                                 .map(cartItem -> {
 
                                         Product product = cartItem.getProduct();
 
-                                        BigDecimal price = product.getBasePrice() != null
-                                                        ? product.getBasePrice()
-                                                        : BigDecimal.ZERO;
+                                        BigDecimal price = cartItem.getPriceAtAddition() != null
+                                                        ? cartItem.getPriceAtAddition()
+                                                        : (product != null && product.getCurrentPrice() != null
+                                                                        ? product.getCurrentPrice()
+                                                                        : (product != null && product.getBasePrice() != null ? product.getBasePrice() : BigDecimal.ZERO));
 
                                         BigDecimal itemTotal = price.multiply(
                                                         BigDecimal.valueOf(cartItem.getQuantity()));
@@ -78,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
                                         return OrderItem.builder()
                                                         .order(order)
                                                         .product(product)
-                                                        .productName(product.getName())
+                                                        .productName(product != null ? product.getName() : "Unknown Product")
                                                         .quantity(cartItem.getQuantity())
                                                         .pricePerUnit(price)
                                                         .totalPrice(itemTotal)
@@ -92,18 +106,33 @@ public class OrderServiceImpl implements OrderService {
 
                 order.setOrderItems(items);
                 order.setTotalAmount(totalAmount);
-                order.setSubtotal(totalAmount); // ! simplified(we can add discount )
+                order.setSubtotal(totalAmount);
 
                 Order savedOrder = orderRepository.save(order);
 
-                // Fire one PURCHASE event per order item
-                savedOrder.getOrderItems().forEach(item -> eventService.trackEvent(EventRequest.builder()
-                                .userId(user.getId())
-                                .productId(item.getProduct().getId())
-                                .eventType(EventType.PURCHASE)
-                                .build()));
+                // Clear the cart after successfully placing order
+                cartItemRepository.deleteByCartId(cart.getId());
+                cart.setTotalAmount(BigDecimal.ZERO);
+                cartRepository.save(cart);
 
-                notificationService.sendOrderConfirmation(user.getId(), savedOrder.getId());
+                // Fire events and notifications safely
+                try {
+                        savedOrder.getOrderItems().forEach(item -> {
+                                if (item.getProduct() != null) {
+                                        eventService.trackEvent(EventRequest.builder()
+                                                        .userId(user.getId())
+                                                        .productId(item.getProduct().getId())
+                                                        .eventType(EventType.PURCHASE)
+                                                        .build());
+                                }
+                        });
+                } catch (Exception ignored) {
+                }
+
+                try {
+                        notificationService.sendOrderConfirmation(user.getId(), savedOrder.getId());
+                } catch (Exception ignored) {
+                }
 
                 return mapToResponse(savedOrder);
         }
@@ -127,13 +156,38 @@ public class OrderServiceImpl implements OrderService {
         }
 
         private OrderResponse mapToResponse(Order order) {
+
+                List<OrderItemResponse> itemResponses = order.getOrderItems() == null
+                                ? Collections.emptyList()
+                                : order.getOrderItems().stream()
+                                                .map(item -> OrderItemResponse.builder()
+                                                                .orderItemId(item.getId())
+                                                                .productId(item.getProduct() != null ? item.getProduct().getId() : null)
+                                                                .productName(item.getProductName())
+                                                                .quantity(item.getQuantity())
+                                                                .pricePerUnit(item.getPricePerUnit())
+                                                                .totalPrice(item.getTotalPrice())
+                                                                .build())
+                                                .toList();
+
                 return OrderResponse.builder()
                                 .orderId(order.getId())
                                 .userId(order.getUser().getId())
+                                .orderNumber(order.getOrderNumber())
                                 .orderStatus(order.getOrderStatus())
                                 .totalAmount(order.getTotalAmount())
+                                .subtotal(order.getSubtotal())
+                                .shippingCharge(order.getShippingCharge())
+                                .taxAmount(order.getTaxAmount())
+                                .discountAmount(order.getDiscountAmount())
+                                .shippingAddress(order.getShippingAddress())
+                                .city(order.getCity())
+                                .state(order.getState())
+                                .country(order.getCountry())
+                                .postalCode(order.getPostalCode())
+                                .trackingNumber(order.getTrackingNumber())
                                 .createdAt(order.getCreatedAt())
-                                .items(Collections.emptyList())
+                                .items(itemResponses)
                                 .build();
         }
 }

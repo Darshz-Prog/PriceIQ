@@ -24,9 +24,12 @@ import java.util.List;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProductServiceImpl implements ProductService {
 
         private final ProductRepository productRepository;
@@ -134,8 +137,10 @@ public class ProductServiceImpl implements ProductService {
                 product.setDescription(request.getDescription());
                 product.setBrand(request.getBrand());
                 product.setCategory(request.getCategory());
-                product.setBasePrice(request.getBasePrice());
-                product.setStockQuantity(request.getStockQuantity());
+                if (request.getBasePrice() != null) product.setBasePrice(request.getBasePrice());
+                if (request.getCurrentPrice() != null) product.setCurrentPrice(request.getCurrentPrice());
+                if (request.getStockQuantity() != null) product.setStockQuantity(request.getStockQuantity());
+                if (request.getActive() != null) product.setActive(request.getActive());
 
                 return mapToResponse(productRepository.save(product));
         }
@@ -160,18 +165,29 @@ public class ProductServiceImpl implements ProductService {
                                                                 .build())
                                                 .toList();
 
+                java.util.Map<String, String> attributes = (product.getAttributes() == null || product.getAttributes().isEmpty())
+                                ? null
+                                : product.getAttributes().stream()
+                                                .collect(java.util.stream.Collectors.toMap(
+                                                                com.PriceIQ.PriceIQ.entity.ProductAttribute::getAttributeName,
+                                                                com.PriceIQ.PriceIQ.entity.ProductAttribute::getAttributeValue,
+                                                                (a, b) -> b));
+
                 return ProductResponse.builder()
                                 .id(product.getId())
                                 .name(product.getName())
                                 .description(product.getDescription())
+                                .sku(product.getSku())
                                 .brand(product.getBrand())
                                 .category(product.getCategory())
                                 .basePrice(product.getBasePrice())
                                 .currentPrice(product.getCurrentPrice())
                                 .stockQuantity(product.getStockQuantity())
+                                .active(product.getActive() != null ? product.getActive() : Boolean.TRUE)
                                 .averageRating(product.getAverageRating())
                                 .totalReviews(product.getTotalReviews())
                                 .images(images)
+                                .attributes(attributes)
                                 .build();
 
                 // why we are not sending image URL to reponce ?

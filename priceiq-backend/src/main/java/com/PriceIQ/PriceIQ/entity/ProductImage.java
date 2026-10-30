@@ -23,6 +23,7 @@ public class ProductImage {
 
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean primaryImage = false;
 
     @Column(nullable = false)

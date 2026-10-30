@@ -35,6 +35,7 @@ public class Review {
     private Product product;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean verifiedPurchase = false;
 
     @CreationTimestamp

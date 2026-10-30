@@ -1,52 +1,68 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Lock, Mail, Phone, ShieldCheck, Sparkles, User } from "lucide-react";
 import { apiRoutes } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { Button, Field, Notice } from "../components/UI";
+
 function AuthShell({ title, subtitle, children, footer }) {
   return (
-    <div className="mx-auto grid max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-soft md:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-ink p-8 text-white md:flex">
-        <div className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand">
-            <Sparkles size={19} />
+    <div className="mx-auto grid max-w-4xl overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card md:grid-cols-2">
+      {/* Brand Side Panel */}
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-ink p-10 text-white md:flex">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand/30 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-accent-violet/20 blur-3xl" />
+
+        <div className="relative z-10 flex items-center gap-2.5">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-brand to-brand-500 text-white shadow-sm">
+            <Sparkles size={20} />
           </span>
-          <b className="text-xl">PriceIQ</b>
+          <span className="text-xl font-extrabold tracking-tight">
+            Price<span className="text-brand-500">IQ</span>
+          </span>
         </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-indigo-300">
-            Shop with confidence
-          </p>
-          <h2 className="mt-4 text-3xl font-black leading-tight">
-            A better way to discover what matters.
+
+        <div className="relative z-10 my-auto py-10">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold text-indigo-200 backdrop-blur-md">
+            <ShieldCheck size={14} className="text-emerald-400" /> Secure Shopping
+          </span>
+          <h2 className="mt-5 text-3xl font-extrabold tracking-tight text-white leading-tight">
+            Intelligent pricing and instant recommendations.
           </h2>
-          <p className="mt-4 text-sm leading-6 text-slate-300">
-            Sign in to access your cart, wishlist, orders, and personalized
-            recommendations.
+          <p className="mt-3 text-sm leading-relaxed text-slate-300">
+            Sign in to unlock personalized hybrid recommendations, save your wishlist, and track orders in real time.
           </p>
         </div>
-        <p className="text-xs text-slate-400">
-          Powered by your PriceIQ backend
-        </p>
+
+        <div className="relative z-10 text-xs text-slate-400">
+          Powered by PriceIQ Spring Boot & Kafka Engine
+        </div>
       </div>
-      <div className="p-6 sm:p-9">
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
-        {children}
+
+      {/* Auth Form Container */}
+      <div className="p-8 sm:p-10 flex flex-col justify-center">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-ink">{title}</h1>
+          <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
+        </div>
+
+        <div className="mt-6">{children}</div>
+
         {footer && (
-          <p className="mt-6 text-center text-sm text-slate-500">{footer}</p>
+          <p className="mt-6 text-center text-xs text-slate-500">{footer}</p>
         )}
       </div>
     </div>
   );
 }
+
 export function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
   async function submit(e) {
     e.preventDefault();
     setError("");
@@ -54,56 +70,79 @@ export function LoginPage() {
     try {
       const { data } = await apiRoutes.login(form);
       signIn(data);
+
+      // Track login event
+      if (data.userId) {
+        apiRoutes
+          .trackEvent({ userId: data.userId, eventType: "LOGIN" })
+          .catch(() => {});
+      }
+
       navigate("/");
     } catch (e) {
       setError(
         e.response?.data?.message ||
-          "Login failed. Verify your credentials and backend availability.",
+          "Login failed. Please verify your email and password.",
       );
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to continue to PriceIQ."
+      subtitle="Sign in to your PriceIQ account."
       footer={
         <>
-          New to PriceIQ?{" "}
-          <Link to="/register" className="font-semibold text-brand">
-            Create an account
+          Don't have an account yet?{" "}
+          <Link to="/register" className="font-bold text-brand hover:underline">
+            Create account
           </Link>
         </>
       }
     >
-      <form onSubmit={submit} className="mt-6 space-y-4">
+      <form onSubmit={submit} className="space-y-4">
         {error && <Notice error={error} />}
+
         <Field
           label="Email address"
           type="email"
           autoComplete="email"
           required
+          icon={<Mail size={16} />}
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           placeholder="you@example.com"
         />
+
         <Field
           label="Password"
           type="password"
           autoComplete="current-password"
           required
+          icon={<Lock size={16} />}
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
-          placeholder="Your password"
+          placeholder="••••••••"
         />
-        <Button type="submit" block disabled={busy}>
-          {busy ? "Signing in…" : "Sign in"}
-        </Button>
+
+        <div className="pt-2">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={busy}
+            loading={busy}
+            className="w-full shadow-glow"
+          >
+            Sign in <ArrowRight size={16} />
+          </Button>
+        </div>
       </form>
     </AuthShell>
   );
 }
+
 export function RegisterPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -116,77 +155,103 @@ export function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
   async function submit(e) {
     e.preventDefault();
     setError("");
     setBusy(true);
     try {
       const { data } = await apiRoutes.register(form);
-      if (data.accessToken) signIn(data);
-      else navigate("/login");
+      if (data.accessToken) {
+        signIn(data);
+        navigate("/");
+      } else {
+        navigate("/login");
+      }
     } catch (e) {
       setError(
         e.response?.data?.message ||
-          "Registration failed. Check the supplied fields and backend response.",
+          "Registration failed. Please check the entered fields.",
       );
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <AuthShell
-      title="Create your account"
-      subtitle="A few details and you're ready to go."
+      title="Create account"
+      subtitle="Join PriceIQ for personalized smart recommendations."
       footer={
         <>
           Already registered?{" "}
-          <Link to="/login" className="font-semibold text-brand">
+          <Link to="/login" className="font-bold text-brand hover:underline">
             Sign in
           </Link>
         </>
       }
     >
-      <form onSubmit={submit} className="mt-6 space-y-3">
+      <form onSubmit={submit} className="space-y-3.5">
         {error && <Notice error={error} />}
+
         <div className="grid grid-cols-2 gap-3">
           <Field
             label="First name"
             required
             value={form.firstName}
             onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+            placeholder="John"
           />
           <Field
             label="Last name"
             required
             value={form.lastName}
             onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+            placeholder="Doe"
           />
         </div>
+
         <Field
           label="Email address"
           type="email"
           required
+          icon={<Mail size={16} />}
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
+          placeholder="john@example.com"
         />
+
         <Field
           label="Password"
           type="password"
           required
           minLength={6}
-          maxLength={100}
+          icon={<Lock size={16} />}
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
+          placeholder="At least 6 characters"
         />
+
         <Field
           label="Phone number (optional)"
           type="tel"
+          icon={<Phone size={16} />}
           value={form.phoneNumber}
           onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
+          placeholder="+91 98765 43210"
         />
-        <Button type="submit" block disabled={busy}>
-          {busy ? "Creating account…" : "Create account"}
-        </Button>
+
+        <div className="pt-2">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={busy}
+            loading={busy}
+            className="w-full shadow-glow"
+          >
+            Create Account <ArrowRight size={16} />
+          </Button>
+        </div>
       </form>
     </AuthShell>
   );
